@@ -94,16 +94,62 @@ class Quartenary_Search_Tree{
         return temp;
     }
     void Delete(int key){
-        Node<T>* dnode = find(Root,key);
-        if(dnode == nullptr){
-            cout<<"Element with key is not present , please check what you wanted to delete\n";
+       Node<T> *dnodeParent = nullptr;
+        Node<T> *dnode = nullptr;
+        int child = 0;
+        if(Root->data->key == key){
+            dnode = Root;
+        }else{
+            dnodeParent = find(Root,key);
+            if(dnodeParent == nullptr){
+                cout<<"Element with this key is not present, please check what do you want to delete \n";
+                return;
+            }
+           
+            if(dnodeParent != nullptr && dnodeParent->left_Most_Child != nullptr && dnodeParent->left_Most_Child->data != nullptr  && dnodeParent->left_Most_Child->data->key == key){
+                dnode = dnodeParent->left_Most_Child;
+            }
+            if(dnodeParent != nullptr && dnodeParent->Second_Child != nullptr && dnodeParent->Second_Child->data != nullptr && dnodeParent->Second_Child->data->key == key){
+                child = 1;
+                dnode = dnodeParent->Second_Child;
+            }
+            if(dnodeParent != nullptr && dnodeParent->Third_Child != nullptr && dnodeParent->Third_Child->data != nullptr && dnodeParent->Third_Child->data->key == key){
+                child = 2;
+                dnode = dnodeParent->Third_Child;
+            }
+            if(dnodeParent != nullptr && dnodeParent->right_Most_Child != nullptr && dnodeParent->right_Most_Child->data != nullptr && dnodeParent->right_Most_Child->data->key == key){
+                child = 3;
+                dnode = dnodeParent->right_Most_Child;
+            }
         }
-        vector<T*> traversal;
-        preorderForDelete(dnode,&traversal);
-        for(int i = 0;i < traversal.size();i++){
-            if(traversal.at(i)->key != key){
-                insert(traversal.at(i));
-                cout<<traversal.at(i)->key;
+        
+        if(dnode == nullptr){
+            return;
+        }
+        Node<T> *predecessor = findPredecessor(dnode);
+        if(predecessor != nullptr){
+             T *newData = predecessor->data;
+             dnode->data = newData;
+             Delete(newData->key);
+             deleteHelper(dnode);
+        }else{
+            Node<T> *successor = findSuccessor(dnode);
+            if(successor != nullptr){
+                T *newData = successor->data;
+                dnode->data = newData;  
+                Delete(newData->key);
+                deleteHelper(dnode); 
+            }else{
+                
+                if(child == 0){
+                    dnodeParent->left_Most_Child = nullptr;
+                }else if(child == 1){
+                    dnodeParent->Second_Child = nullptr;
+                }else if(child == 2){
+                    dnodeParent->Third_Child = nullptr;
+                }else if(child == 3){
+                    dnodeParent->right_Most_Child = nullptr;
+                }
             }
         }
     }

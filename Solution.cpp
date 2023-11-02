@@ -30,7 +30,7 @@ class Quartenary_Search_Tree{
     void make(T &initial_State){
        
     }
-    void insert(T &element){
+    void insert(T *element){
         if(Root == nullptr){
             Root = new Node<T>();
             Root->data = element;
@@ -38,13 +38,13 @@ class Quartenary_Search_Tree{
         }
         Root = insertHelper(Root,element);
     }
-    T* insertHelper(Node<T> *root,T *element){
+    Node<T>* insertHelper(Node<T> *root,T *element){
         if(root == nullptr){
-            Node<T> newNode = new Node<T>();
+            Node<T> *newNode = new Node<T>();
             newNode->data = element;
             return newNode;
         }
-        T temp = root->data;
+        T *temp = root->data;
         int rootKey = temp->key;
         int elementKey = element->key; 
         if(elementKey >= 0 && elementKey < (rootKey/2)){
@@ -61,24 +61,30 @@ class Quartenary_Search_Tree{
     void Delete(){
 
     }
-    void preorder(T *root){
+    void pretorder(){
+        preorderHelper(Root);
+    }
+    void preorderHelper(Node<T> *root){
         if(root == nullptr){
             return;
         }
         cout<<root->data->key;
-        preorder(root->left_Most_Child);
-        preorder(root->Second_Child);
-        preorder(root->Third_Child);
-        preorder(root->right_Most_Child);
+        preorderHelper(root->left_Most_Child);
+        preorderHelper(root->Second_Child);
+        preorderHelper(root->Third_Child);
+        preorderHelper(root->right_Most_Child);
     }
-    void postorder(T *root){
+    void postorder(){
+        postorderHelper(Root);
+    }
+    void postorderHelper(Node<T> *root){
         if(root == nullptr){
             return;
         }
-        postorder(root->left_Most_Child);
-        postorder(root->Second_Child);
-        postorder(root->Third_Child);
-        postorder(root->right_Most_Child);
+        postorderHelper(root->left_Most_Child);
+        postorderHelper(root->Second_Child);
+        postorderHelper(root->Third_Child);
+        postorderHelper(root->right_Most_Child);
         cout<<root->data->key;
     }
 };
@@ -93,9 +99,10 @@ class customClass_2{
 };
 int main(){
     Quartenary_Search_Tree<customClass_1> QSTtree = Quartenary_Search_Tree<customClass_1>();
-    customClass_1 obj = customClass_1();
-    obj.key = 10;
+    customClass_1 *obj = new customClass_1();
+    obj->key = 10;
     QSTtree.insert(obj);
+    QSTtree.postorder();
     return 0;
 }
 

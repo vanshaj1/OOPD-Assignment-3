@@ -16,7 +16,7 @@
 * if any value less than zero given by user then program will be aborted 
 
 # exception handling 
-* to ensure that the options chosen by the user do not create undefined situations.
+* To ensure that the options chosen by the user do not create undefined situations.
 * if user give the key that is not present then `NodeNotFound` custom exception will be used to handle this
 * Also used at proper places like while calling insert function and delete function and others
 

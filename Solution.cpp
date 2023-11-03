@@ -1,9 +1,22 @@
-// ******************************************************** Assignment 3 *****************************************************
-                     //********************** Templates, assert and Exception Handling ***************************
+// ****************************************************** Assignment 3 *****************************************************
+                    //********************** Templates, assert and Exception Handling ***************************
 #include <iostream>
 #include <cassert>
 #include <vector>
 using namespace std;
+
+//*****************************************************Custom Exception******************************************************************
+class NodeNotFound :public exception{
+    public:
+        string message(){
+            string res = "Node is not found in the Quantenary Search tree";
+            return res;
+        }
+};
+
+
+
+//************************************Data structure Quanternary Search tree using templates***********************************************
 
 template<typename T>
 class Node{
@@ -90,90 +103,69 @@ class Quartenary_Search_Tree{
                 temp = temp->left_Most_Child;
             }
         }
-        
         return temp;
     }
     void Delete(int key){
-       Node<T> *dnodeParent = nullptr;
+        Node<T> *dnodeParent = nullptr;
         Node<T> *dnode = nullptr;
-        int child = 0;
-        if(Root->data->key == key){
-            dnode = Root;
-        }else{
-            dnodeParent = find(Root,key);
-            if(dnodeParent == nullptr){
-                cout<<"Element with this key is not present, please check what do you want to delete \n";
-                return;
+        dnodeParent = findParent(Root,key);
+        dnode = find(Root,key);
+
+        try{
+            if(dnode == nullptr){
+                throw NodeNotFound();
             }
-           
-            if(dnodeParent != nullptr && dnodeParent->left_Most_Child != nullptr && dnodeParent->left_Most_Child->data != nullptr  && dnodeParent->left_Most_Child->data->key == key){
-                dnode = dnodeParent->left_Most_Child;
-            }
-            if(dnodeParent != nullptr && dnodeParent->Second_Child != nullptr && dnodeParent->Second_Child->data != nullptr && dnodeParent->Second_Child->data->key == key){
-                child = 1;
-                dnode = dnodeParent->Second_Child;
-            }
-            if(dnodeParent != nullptr && dnodeParent->Third_Child != nullptr && dnodeParent->Third_Child->data != nullptr && dnodeParent->Third_Child->data->key == key){
-                child = 2;
-                dnode = dnodeParent->Third_Child;
-            }
-            if(dnodeParent != nullptr && dnodeParent->right_Most_Child != nullptr && dnodeParent->right_Most_Child->data != nullptr && dnodeParent->right_Most_Child->data->key == key){
-                child = 3;
-                dnode = dnodeParent->right_Most_Child;
-            }
+        }catch(NodeNotFound e){
+            cout<<e.message()<<endl;
+            exit(1);
         }
         
-        if(dnode == nullptr){
+        if(dnode->left_Most_Child == nullptr && dnode->Second_Child == nullptr && dnode->Third_Child == nullptr && dnode->right_Most_Child == nullptr){
+            if(dnodeParent == nullptr){
+                Root = nullptr;
+                // cout<<"Here at root == null\n";
+                return;
+            }else{
+                 if(dnodeParent->left_Most_Child != nullptr && dnodeParent->left_Most_Child->data->key == key){
+                    dnodeParent->left_Most_Child = nullptr;
+                }else if(dnodeParent->Second_Child != nullptr && dnodeParent->Second_Child->data->key == key){
+                    dnodeParent->Second_Child = nullptr;
+                }else if(dnodeParent->Third_Child != nullptr && dnodeParent->Third_Child->data->key == key){
+                    dnodeParent->Third_Child = nullptr;
+                }else if(dnodeParent->right_Most_Child != nullptr && dnodeParent->right_Most_Child->data->key == key){
+                    dnodeParent->right_Most_Child = nullptr;
+                }
+                // cout<<"Leave else\n";
+            }
             return;
         }
+
         Node<T> *predecessor = findPredecessor(dnode);
         if(predecessor != nullptr){
              T *newData = predecessor->data;
-             dnode->data = newData;
+             int tempKey = newData->key;
+             dnode->data->key = -1;
              Delete(newData->key);
+             dnode->data = newData;
+             dnode->data->key = tempKey;
              deleteHelper(dnode);
+            //  cout<<"predecessor\n";
         }else{
             Node<T> *successor = findSuccessor(dnode);
             if(successor != nullptr){
                 T *newData = successor->data;
-                dnode->data = newData;  
+                int tempKey = newData->key;
+                dnode->data->key = -1;
                 Delete(newData->key);
-                deleteHelper(dnode); 
-            }else{
-                
-                if(child == 0){
-                    dnodeParent->left_Most_Child = nullptr;
-                }else if(child == 1){
-                    dnodeParent->Second_Child = nullptr;
-                }else if(child == 2){
-                    dnodeParent->Third_Child = nullptr;
-                }else if(child == 3){
-                    dnodeParent->right_Most_Child = nullptr;
-                }
+                dnode->data = newData;
+                dnode->data->key = tempKey;  
+                deleteHelper(dnode);
+                // cout<<"Successor\n"; 
             }
         }
     }
-    void preorderForDelete(Node<T>* root,vector<T*> &traversal){
-        if(root == nullptr){
-            return;
-        }
-        traversal.push_back(root->data);
-        preorderForDelete(root->left_Most_Child,&traversal);
-        preorderForDelete(root->Second_Child,&traversal);
-        preorderForDelete(root->Third_Child,&traversal);
-        preorderForDelete(root->right_Most_Child,&traversal);
-    }
-    void Inorder(Node<T>* root,T* traversal[],int idx){
-        if(root == nullptr){
-            return;
-        }
-        Inorder(root->left_Most_Child,traversal,idx);
-        Inorder(root->Second_Child,traversal,idx);
-        traversal.push_back(root->data);
-        Inorder(root->Third_Child,traversal,idx);
-        Inorder(root->right_Most_Child,traversal,idx);
-    }
     Node<T>* deletetHelper1(Node<T> *root,Node<T> *element){
+        // cout<<"At deleteHelper1\n";
         if(root == nullptr){
             Node<T> *newNode = new Node<T>();
             newNode = element;
@@ -194,6 +186,7 @@ class Quartenary_Search_Tree{
         return root;
     }
     void deleteHelper(Node<T>* dnode){
+        // cout<<"Delete Helper\n";
         if(dnode == nullptr){
             return;
         }
@@ -233,16 +226,39 @@ class Quartenary_Search_Tree{
 
 
     }
+    Node<T>* findParent(Node<T> *Root,int key){
+        if(Root == nullptr){
+            return nullptr;
+        }
+        int dataKey = Root->data->key;
+        if(Root->left_Most_Child != nullptr && Root->left_Most_Child->data->key == key){
+            return Root;
+        }else if(Root->Second_Child != nullptr && Root->Second_Child->data->key == key){
+            return Root;
+        }else if(Root->Third_Child != nullptr && Root->Third_Child->data->key == key){
+            return Root;
+        }else if(Root->right_Most_Child != nullptr && Root->right_Most_Child->data->key == key){
+            return Root;
+        }
+        if(key >= 0 && key < (dataKey/2)){
+            return findParent(Root->left_Most_Child,key);
+        }else if(key >= (dataKey/2) && key < (dataKey)){
+            return findParent(Root->Second_Child,key);
+        }else if(key > dataKey && key < (2*dataKey)){
+            return findParent(Root->Third_Child,key);
+        }else if(key >= (2*dataKey)){
+            return findParent(Root->right_Most_Child,key);
+        }
+        return nullptr;
+    }
     Node<T>* find(Node<T> *Root,int key){
         if(Root == nullptr){
             return nullptr;
         }
         int dataKey = Root->data->key;
-
         if(Root->data->key == key){
             return Root;
         }
-
         if(key >= 0 && key < (dataKey/2)){
             return find(Root->left_Most_Child,key);
         }else if(key >= (dataKey/2) && key < (dataKey)){
@@ -289,6 +305,10 @@ class Quartenary_Search_Tree{
     }
 };
 
+
+
+
+//***********************************************Two custom Classes (NON PRIMITIVE DATA TYPES)*******************************
 class customClass_1{
     public:
         int key;
@@ -309,29 +329,175 @@ class customClass_2{
             this->key = key;
         }
 };
+
+
+
+
+//*************************************************Driver Code with Menu driven Acess to Data structure***************************************
 int main(){
-    customClass_1 obj;
-    obj.key = 10;
-    customClass_1 obj1;
-    obj1.key = 20;
-    customClass_1 array[2] = {obj,obj1};
-    Quartenary_Search_Tree<customClass_1> QSTtree(array);
-    char ch;
-    cin >> ch;
-    switch (ch)
-    {
-    case 'I':
-        QSTtree.insert(obj);
-        break;
-    case 'D': 
-        QSTtree.Delete(10);
-    case 'P':
-        QSTtree.preorder();
-    case 'T':
-        QSTtree.postorder();               
-    default:
-        break;
+    cout<<"Please select one custom class (NON PRIMITIVE TYPE) from below:- \n";
+    cout<<"1 - custom class 1\n";
+    cout<<"2 - custom class 2\n";
+    int choice = 1;
+    cin>>choice;
+    if(choice == 1){
+        customClass_1 obj;
+        obj.key = 10;
+        customClass_1 obj1;
+        obj1.key = 20;
+        customClass_1 array[2] = {obj1,obj};
+        Quartenary_Search_Tree<customClass_1> QSTtree(array);
+        // customClass_1 obj2;
+        // obj2.key = 0;
+        // QSTtree.insert(&obj2);
+        // customClass_1 obj3;
+        // obj3.key = 30;
+        // QSTtree.insert(&obj3);
+        // customClass_1 obj4;
+        // obj4.key = 40;
+        // QSTtree.insert(&obj4);
+
+        while(true){
+            cout<<"Select an option to perform:-\n";
+            cout<<"0 - Insertion\n";
+            cout<<"1 - Deletion\n";
+            cout<<"2 - Preorder\n";
+            cout<<"3 - Postorder\n";
+            cout<<"4 - Exit\n";
+            int option = 4;
+            cin>>option;
+            switch(option){
+                case 0: {
+                        cout<<"Enter the key to insert: ";
+                        int key;
+                        cin>>key;
+                        assert((key >= 0));
+                        customClass_1 *obj = new customClass_1(key);
+
+                        try{ 
+                            QSTtree.insert(obj);
+                        }catch(exception e){
+                            cout<<"Exception occured while inserting elements, when ths key is:- "<<key<<endl;
+                            cout<<e.what();
+                            return 0;
+                        }
+
+                        cout<<"Now After Insertion the tree is :- \n";
+                        QSTtree.preorder();
+                        break;
+                    }
+                case 1:{
+                        cout<<"Enter the key to delete from Tree: ";
+                        int key;
+                        cin>>key;
+                        assert((key >= 0));
+
+                        try{
+                            QSTtree.Delete(key);
+                        }catch(exception e){
+                            cout<<"Exception occured while Deleting elements, when ths key is:- "<<key<<endl;
+                            cout<<e.what();
+                            return 0;
+                        }
+                        
+                        cout<<"Now After Deletion the tree is :- \n";
+                        QSTtree.preorder();
+                        break;
+                        }
+                case 2:{
+                        QSTtree.preorder();
+                        break;
+                        }
+                case 3:{
+                        QSTtree.postorder();
+                        break;
+                        }
+                case 4: {
+                        exit(0);
+                        }
+                    
+            }
+        }
+    }else if(choice == 2){
+        customClass_2 obj;
+        obj.key = 10;
+        customClass_2 obj1;
+        obj1.key = 20;
+        customClass_2 array[2] = {obj1,obj};
+        Quartenary_Search_Tree<customClass_2> QSTtree(array);
+        // customClass_1 obj2;
+        // obj2.key = 0;
+        // QSTtree.insert(&obj2);
+        // customClass_1 obj3;
+        // obj3.key = 30;
+        // QSTtree.insert(&obj3);
+        // customClass_1 obj4;
+        // obj4.key = 40;
+        // QSTtree.insert(&obj4);
+
+        while(true){
+            cout<<"Select an option to perform:-\n";
+            cout<<"0 - Insertion\n";
+            cout<<"1 - Deletion\n";
+            cout<<"2 - Preorder\n";
+            cout<<"3 - Postorder\n";
+            cout<<"4 - Exit\n";
+            int option = 4;
+            cin>>option;
+            switch(option){
+                case 0: {
+                        cout<<"Enter the key to insert: ";
+                        int key;
+                        cin>>key;
+                        assert((key >= 0));
+                        customClass_2 *obj = new customClass_2(key);
+
+                        try{
+                            QSTtree.insert(obj);
+                        }catch(exception e){
+                            cout<<"Exception occured while inserting elements, when ths key is:- "<<key<<endl;
+                            cout<<e.what();
+                            return 0;
+                        }
+
+                        cout<<"Now After Insertion the tree is :- \n";
+                        QSTtree.preorder();
+                        break;
+                    }
+                case 1:{
+                        cout<<"Enter the key to delete from Tree: ";
+                        int key;
+                        cin>>key;
+                        assert((key >= 0));
+
+                        try{
+                            QSTtree.Delete(key);
+                        }catch(exception e){
+                            cout<<"Exception occured while Deleting elements, when ths key is:- "<<key<<endl;
+                            cout<<e.what();
+                            return 0;
+                        }
+                        
+                        cout<<"Now After Deletion the tree is :- \n";
+                        QSTtree.preorder();
+                        break;
+                        }
+                case 2:{
+                        QSTtree.preorder();
+                        break;
+                        }
+                case 3:{
+                        QSTtree.postorder();
+                        break;
+                        }
+                case 4: {
+                        exit(0);
+                        }
+                    
+            }
+        }
     }
+        
     return 0;
 }
 
